@@ -1,0 +1,30 @@
+{
+  "name": "com.commontime.cordova.authentication",
+  "version": "1.0.0",
+  "description": "Commontime cordova authentication plugin.",
+  "cordova": {
+    "id": "com.commontime.cordova.authentication",
+    "platforms": [
+      "android",
+      "ios"
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/commontime/com.commontime.cordova.authentication.git"
+  },
+  "keywords": [
+    "cordova",
+    "authentication",
+    "commontime",
+    "cordova-android"
+  ],
+  "engines": [
+    {
+      "name": "cordova",
+      "version": ">=3.0.0"
+    }
+  ],
+  "author": "Commontime Ltd",
+  "license": "MIT"
+}

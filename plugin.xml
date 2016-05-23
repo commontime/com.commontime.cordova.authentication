@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<plugin xmlns="http://www.phonegap.com/ns/plugins/1.0"
+        id="com.commontime.cordova.authentication"
+        version="1.0.0">
+
+  <name>Authentication</name>
+
+  <asset src="www/authentication.js" target="js/authentication.js"/>
+
+  <js-module src="www/authentication.js" name="authentication">
+    <clobbers target="authentication" />
+  </js-module>
+
+  <platform name="android">
+
+    <config-file target="res/xml/config.xml" parent="/*">
+      <feature name="Authentication">
+        <param name="android-package" value="com.commontime.plugin.Authentication"/>
+        <param name="onload" value="true" />
+      </feature>
+    </config-file>
+
+    <config-file target="AndroidManifest.xml" parent="/*">
+        <uses-permission android:name="android.permission.USE_FINGERPRINT" />
+    </config-file>
+
+    <source-file src="src/android/Authentication.java" target-dir="src/com/commontime/plugin/"/>
+    <source-file src="src/android/AuthenticationDialogFragment.java" target-dir="src/com/commontime/plugin/" />
+    <source-file src="src/android/AuthenticationUiHelper.java" target-dir="src/com/commontime/plugin/" />
+    <source-file src="res/android/drawable/ic_fingerprint_error.xml" target-dir="res/drawable" />
+    <source-file src="res/android/drawable/ic_fingerprint_success.xml" target-dir="res/drawable" />
+    <source-file src="res/android/drawable-hdpi/ic_fp_40px.png" target-dir="res/drawable-hdpi" />
+    <source-file src="res/android/drawable-mdpi/ic_fp_40px.png" target-dir="res/drawable-mdpi" />
+    <source-file src="res/android/drawable-nodpi/android_robot.png" target-dir="res/drawable-nodpi" />
+    <source-file src="res/android/drawable-xhdpi/ic_fp_40px.png" target-dir="res/drawable-xhdpi" />
+    <source-file src="res/android/drawable-xxhdpi/ic_fp_40px.png" target-dir="res/drawable-xxhdpi" />
+    <source-file src="res/android/drawable-xxxhdpi/ic_fp_40px.png" target-dir="res/drawable-xxxhdpi" />
+    <source-file src="res/android/layout/auth_dialog_container.xml" target-dir="res/layout" />
+    <source-file src="res/android/layout/auth_dialog_content.xml" target-dir="res/layout" />
+    <source-file src="res/android/layout/auth_dialog_container_no_fingerprint.xml" target-dir="res/layout" />
+    <source-file src="res/android/values/auth-colors.xml" target-dir="res/values" />
+    <source-file src="res/android/values/auth-strings.xml" target-dir="res/values" />
+
+  </platform> 
+
+  <platform name="ios">
+
+    <config-file target="config.xml" parent="/widget">
+      <feature name="Authentication">
+        <param name="ios-package" value="Authentication" />
+      </feature>
+    </config-file>
+
+    <framework src="LocalAuthentication.framework" />
+    <framework src="Security.framework" />
+
+    <header-file src="src/ios/Authentication.h" target-dir="AuthenticationPlugin"/>
+    <source-file src="src/ios/Authentication.m" target-dir="AuthenticationPlugin"/>
+
+  </platform>
+
+</plugin>
