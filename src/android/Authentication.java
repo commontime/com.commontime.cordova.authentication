@@ -196,6 +196,10 @@ public class Authentication extends CordovaPlugin {
 	}
 
 	private boolean isFingerprintAuthAvailable() {
+		if(android.os.Build.VERSION.SDK_INT < 23)
+			return false;
+		if(mFingerPrintManager == null)
+			return false;
 		return mFingerPrintManager.isHardwareDetected()
 				&& mFingerPrintManager.hasEnrolledFingerprints();
 	}
