@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <plugin xmlns="http://www.phonegap.com/ns/plugins/1.0"
         id="com.commontime.cordova.authentication"
-        version="1.0.5">
+        version="1.0.6">
 
   <name>Authentication</name>
 
@@ -11,7 +11,7 @@
     <clobbers target="authentication" />
   </js-module>
 
-  <platform name="android">
+  <!--<platform name="android">
 
     <config-file target="res/xml/config.xml" parent="/*">
       <feature name="Authentication">
@@ -41,7 +41,7 @@
     <source-file src="res/android/values/auth-colors.xml" target-dir="res/values" />
     <source-file src="res/android/values/auth-strings.xml" target-dir="res/values" />
 
-  </platform>
+  </platform>-->
 
   <platform name="ios">
 
