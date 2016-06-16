@@ -1,6 +1,6 @@
 {
   "name": "com.commontime.cordova.authentication",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Commontime cordova authentication plugin.",
   "cordova": {
     "id": "com.commontime.cordova.authentication",
