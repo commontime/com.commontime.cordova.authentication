@@ -2,7 +2,7 @@
 
 @interface Authentication :CDVPlugin
 
-- (void) isAvailable:(CDVInvokedUrlCommand*)command;
+- (void) availability:(CDVInvokedUrlCommand*)command;
 
 - (void) authenticate:(CDVInvokedUrlCommand*)command;
 - (void) authenticateCustomPasswordFallback:(CDVInvokedUrlCommand*)command;

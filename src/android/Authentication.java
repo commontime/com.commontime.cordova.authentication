@@ -7,12 +7,15 @@ import org.apache.cordova.CordovaInterface;
 
 import android.annotation.TargetApi;
 import android.app.KeyguardManager;
+import android.content.Context;
+import android.content.Intent;
 import android.hardware.fingerprint.FingerprintManager;
+import android.os.Build;
 import android.security.keystore.KeyGenParameterSpec;
-import android.security.keystore.KeyPermanentlyInvalidatedException;
 import android.security.keystore.KeyProperties;
 import android.util.Base64;
 import android.util.Log;
+import android.widget.Toast;
 
 import org.apache.cordova.PluginResult;
 import org.json.JSONArray;
@@ -36,7 +39,7 @@ import javax.crypto.KeyGenerator;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 
-@TargetApi(23)
+
 public class Authentication extends CordovaPlugin {
 
 	public static final String TAG = "FingerprintAuth";
@@ -44,6 +47,7 @@ public class Authentication extends CordovaPlugin {
 
 	private static final String DIALOG_FRAGMENT_TAG = "FpAuthDialog";
 	private static final String ANDROID_KEY_STORE = "AndroidKeyStore";
+	private static final int REQUEST_CODE_CONFIRM_DEVICE_CREDENTIALS = 1;
 
 	KeyguardManager mKeyguardManager;
 	AuthenticationDialogFragment mFragment;
@@ -82,13 +86,11 @@ public class Authentication extends CordovaPlugin {
 		packageName = cordova.getActivity().getApplicationContext().getPackageName();
 		mPluginResult = new PluginResult(PluginResult.Status.NO_RESULT);
 
-		if (android.os.Build.VERSION.SDK_INT < 23) {
-			return;
-		}
+		mKeyguardManager = (KeyguardManager) cordova.getActivity().getSystemService(Context.KEYGUARD_SERVICE);// .getSystemService(KeyguardManager.class);
 
-		mKeyguardManager = cordova.getActivity().getSystemService(KeyguardManager.class);
-		mFingerPrintManager = cordova.getActivity().getApplicationContext()
-				.getSystemService(FingerprintManager.class);
+		if(aboveSdkM()) {
+			mFingerPrintManager = cordova.getActivity().getApplicationContext().getSystemService(FingerprintManager.class);
+		}
 
 		try {
 			mKeyGenerator = KeyGenerator.getInstance(
@@ -96,11 +98,11 @@ public class Authentication extends CordovaPlugin {
 			mKeyStore = KeyStore.getInstance(ANDROID_KEY_STORE);
 
 		} catch (NoSuchAlgorithmException e) {
-			throw new RuntimeException("Failed to get an instance of KeyGenerator", e);
+			//throw new RuntimeException("Failed to get an instance of KeyGenerator", e);
 		} catch (NoSuchProviderException e) {
-			throw new RuntimeException("Failed to get an instance of KeyGenerator", e);
+			//throw new RuntimeException("Failed to get an instance of KeyGenerator", e);
 		} catch (KeyStoreException e) {
-			throw new RuntimeException("Failed to get an instance of KeyStore", e);
+			//throw new RuntimeException("Failed to get an instance of KeyStore", e);
 		}
 
 		try {
@@ -108,9 +110,9 @@ public class Authentication extends CordovaPlugin {
 					+ KeyProperties.BLOCK_MODE_CBC + "/"
 					+ KeyProperties.ENCRYPTION_PADDING_PKCS7);
 		} catch (NoSuchAlgorithmException e) {
-			throw new RuntimeException("Failed to get an instance of Cipher", e);
+			//throw new RuntimeException("Failed to get an instance of Cipher", e);
 		} catch (NoSuchPaddingException e) {
-			throw new RuntimeException("Failed to get an instance of Cipher", e);
+			//throw new RuntimeException("Failed to get an instance of Cipher", e);
 		}
 	}
 
@@ -136,6 +138,12 @@ public class Authentication extends CordovaPlugin {
 		} catch (Exception e){}
 
 		if (action.equals("authenticate")) {
+			if(!authApiAvailable()) {
+				mPluginResult = new PluginResult(PluginResult.Status.ERROR);
+				mCallbackContext.error("Authentication not available on this device");
+				mCallbackContext.sendPluginResult(mPluginResult);
+				return true;
+			}
 			if (mClientId == null || mClientId == null) {
 				mPluginResult = new PluginResult(PluginResult.Status.ERROR);
 				mCallbackContext.error("Missing required parameters");
@@ -176,17 +184,23 @@ public class Authentication extends CordovaPlugin {
 			}
 			else
 			{
-				mFragment = new AuthenticationDialogFragment();
-				mFragment.setCancelable(false);
-				mFragment.setStage(AuthenticationDialogFragment.Stage.BACKUP);
-				mFragment.show(cordova.getActivity().getFragmentManager(), DIALOG_FRAGMENT_TAG);
+				showStandardAuthScreen();
 			}
 			return true;
 		} else if (action.equals("availability")) {
+
 			JSONObject resultJson = new JSONObject();
-			resultJson.put("isAvailable", isFingerprintAuthAvailable());
-			resultJson.put("isHardwareDetected", mFingerPrintManager.isHardwareDetected());
-			resultJson.put("hasEnrolledFingerprints", mFingerPrintManager.hasEnrolledFingerprints());
+
+			if(!authApiAvailable()) {
+				resultJson.put("isAvailable", false);
+			} else {
+				resultJson.put("isAvailable", true);
+				resultJson.put("isFingerprintAvailable", isFingerprintAuthAvailable());
+				if(mFingerPrintManager != null) {
+					resultJson.put("isHardwareDetected", mFingerPrintManager.isHardwareDetected());
+					resultJson.put("hasEnrolledFingerprints", mFingerPrintManager.hasEnrolledFingerprints());
+				}
+			}
 			mPluginResult = new PluginResult(PluginResult.Status.OK);
 			mCallbackContext.success(resultJson);
 			mCallbackContext.sendPluginResult(mPluginResult);
@@ -196,8 +210,6 @@ public class Authentication extends CordovaPlugin {
 	}
 
 	private boolean isFingerprintAuthAvailable() {
-		if(android.os.Build.VERSION.SDK_INT < 23)
-			return false;
 		if(mFingerPrintManager == null)
 			return false;
 		return mFingerPrintManager.isHardwareDetected()
@@ -318,5 +330,51 @@ public class Authentication extends CordovaPlugin {
 		mPluginResult = new PluginResult(PluginResult.Status.ERROR);
 //		mCallbackContext.sendPluginResult(mPluginResult);
 		return false;
+	}
+
+	private boolean authApiAvailable()
+	{
+		return Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP;
+	}
+
+	private boolean aboveSdkM()
+	{
+		return Build.VERSION.SDK_INT >= Build.VERSION_CODES.M;
+	}
+
+	private void showStandardAuthScreen() {
+		if (!mKeyguardManager.isKeyguardSecure()) {
+			// Show a message that the user hasn't set up a lock screen.
+			int secure_lock_screen_required_id = cordova.getActivity().getResources()
+					.getIdentifier("secure_lock_screen_required", "string",
+							Authentication.packageName);
+			Toast.makeText(cordova.getActivity(),
+					cordova.getActivity().getString(secure_lock_screen_required_id),
+					Toast.LENGTH_LONG).show();
+			setPluginResultError("Secure lock screen required");
+			return;
+		}
+		showAuthenticationScreen();
+	}
+
+	private void showAuthenticationScreen() {
+		// Create the Confirm Credentials screen. You can customize the title and description. Or
+		// we will provide a generic one for you if you leave it null
+		Intent intent = mKeyguardManager.createConfirmDeviceCredentialIntent(null, null);
+		if (intent != null) {
+			cordova.startActivityForResult(this, intent, REQUEST_CODE_CONFIRM_DEVICE_CREDENTIALS);
+		}
+	}
+
+	@Override
+	public void onActivityResult(int requestCode, int resultCode, Intent data) {
+		if (requestCode == REQUEST_CODE_CONFIRM_DEVICE_CREDENTIALS) {
+			// Challenge completed, proceed with using cipher
+			if (resultCode == cordova.getActivity().RESULT_OK) {
+				Authentication.onAuthenticated(false);
+			} else {
+				Authentication.setPluginResultError("Cancelled");
+			}
+		}
 	}
 }

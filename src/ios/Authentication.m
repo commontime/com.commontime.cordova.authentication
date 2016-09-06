@@ -7,7 +7,7 @@
 NSString *keychainItemIdentifier = @"TouchIDKey";
 NSString *keychainItemServiceName;
 
-- (void) isAvailable:(CDVInvokedUrlCommand*)command; {
+- (void) availability:(CDVInvokedUrlCommand*)command; {
 
   if (NSClassFromString(@"LAContext") == NULL) {
     [self.commandDelegate sendPluginResult:[CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR] callbackId:command.callbackId];
